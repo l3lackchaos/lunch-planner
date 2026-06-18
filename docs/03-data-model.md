@@ -37,17 +37,21 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 | note | text | |
 | created_by | uuid → users.id | |
 
-### daily_menus — เมนูรายวันในสัปดาห์
+### menus — เมนูรายวัน (ปฏิทินรายเดือน, key = วันที่)
+> เปลี่ยนจากผูกกับ week_plan มาเป็น **key ด้วย `menu_date`** เพื่อรองรับการวางแผนเมนู
+> ล่วงหน้าเป็นเดือน (ดูภาพปฏิทิน "June 2026") — week_plan (รอบบิล) อ้างอิงช่วงวันที่แทน
+
 | column | type | note |
 |--------|------|------|
 | id | uuid PK | |
-| week_plan_id | uuid → week_plans.id (cascade) | |
-| weekday | smallint check (1..5) | 1=จ … 5=ศ |
-| menu_date | date not null | วันจริง |
+| menu_date | date not null unique | วันจริง (PK เชิงตรรกะ) |
 | name | text | ชื่อเมนู |
 | description | text | |
 | image_url | text | รูปเมนู (optional) |
-| unique (week_plan_id, weekday) | | |
+| proposed_by | text | **ชื่อคนเลือก/รับผิดชอบ** เช่น "พี่อีฟ" (หรือ uuid→users.id ถ้าผูกบัญชี) |
+| is_holiday | boolean default false | **วันหยุด** → ไม่มีออเดอร์/ไม่คิดเงิน |
+
+> หมายเหตุ: `weekday` ดึงจาก `menu_date` ได้ (`extract(isodow …)`) ไม่ต้องเก็บซ้ำ
 
 ### orders — 1 สมาชิก / 1 สัปดาห์
 | column | type | note |
@@ -95,12 +99,45 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 ## 3. Views / Helpers (สำหรับสรุป)
 
 ```sql
--- สรุปนับไข่ต่อวัน (สำหรับแม่ครัว)
+-- สรุปนับไข่ต่อวัน (สำหรับแม่ครัว) — แยก doneness (ดาวสุก/ไม่สุก)
 create view daily_egg_summary as
-select oi.menu_date, oi.weekday, oi.egg, oi.doneness, count(*) as qty
+select oi.menu_date, oi.egg, oi.doneness, count(*) as qty
 from order_items oi
 join orders o on o.id = oi.order_id
-group by oi.menu_date, oi.weekday, oi.egg, oi.doneness;
+group by oi.menu_date, oi.egg, oi.doneness;
+
+-- (ก) ตารางสรุปออเดอร์ (Order Grid): สมาชิก "ทุกคน" × ทุกวันในสัปดาห์
+-- LEFT JOIN จากรายชื่อ → คนที่ไม่สั่ง = ไม่มี order_item → แสดง 'ไม่กิน'
+-- egg='none' → 'ไม่ทานไข่' ; มีไข่ → แสดงชนิด (+doneness)
+create view weekly_order_grid as
+select u.id as user_id, u.display_name, m.menu_date,
+       case
+         when oi.id is null then 'ไม่กิน'              -- ไม่มีออเดอร์วันนั้น
+         when oi.egg = 'none' then 'ไม่ทานไข่'          -- สั่งข้าว ไม่เอาไข่
+         when oi.egg = 'fried' and oi.doneness='soft' then 'ดาวไม่สุก'
+         when oi.egg = 'fried' then 'ไข่ดาวสุก'
+         when oi.egg = 'boiled' then 'ต้ม'
+         when oi.egg = 'omelette' then 'ไข่เจียว'
+       end as cell,
+       (oi.id is not null) as is_eating
+from users u
+cross join menus m
+left join orders o   on o.user_id = u.id
+left join order_items oi on oi.order_id = o.id and oi.menu_date = m.menu_date
+where u.role <> 'admin' or true            -- รวมทุกสมาชิก (ปรับด้วย active flag ได้)
+  and m.is_holiday = false;
+-- ใช้ filter ช่วงวันที่ของสัปดาห์ (week_plans.week_start .. +4) ตอน query
+
+-- (ข) ใครยังไม่สั่งข้าวในวันนั้น
+create view daily_not_ordered as
+select m.menu_date, u.id as user_id, u.display_name
+from menus m
+cross join users u
+where m.is_holiday = false
+  and not exists (
+    select 1 from orders o join order_items oi on oi.order_id = o.id
+    where o.user_id = u.id and oi.menu_date = m.menu_date
+  );
 
 -- สถานะจ่ายเงินต่อสัปดาห์ (สำหรับ admin dashboard)
 create view weekly_payment_status as
@@ -112,6 +149,10 @@ join orders o on o.week_plan_id = wp.id
 join users u on u.id = o.user_id
 left join payments p on p.order_id = o.id;
 ```
+
+> **Roster:** ตาราง `users` ทำหน้าที่เป็นรายชื่อสมาชิกของกลุ่ม (ทุกคนที่เคยล็อกอิน)
+> ตาราง grid อิงรายชื่อนี้ จึงโชว์คนที่ "ไม่กิน/ไม่สั่ง" ได้ครบ. แนะนำเพิ่ม `users.is_active`
+> (boolean) เพื่อกรองคนที่ออกจากกลุ่มออกจากสรุป
 
 ## 4. RLS (Row Level Security) — สรุปนโยบาย
 
