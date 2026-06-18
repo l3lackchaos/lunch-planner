@@ -76,6 +76,11 @@
   - Depends on: Phase 3
 - **T4.3 🟢 Cook role (optional)** — ให้ role `cook` เข้าหน้า summary แบบ read-only
   - Depends on: T4.1
+- **T4.4 🟢 Search input (ค้นหารายชื่อ)** — ช่อง Search ในหน้า payments dashboard + summary,
+  กรองตาม `display_name` (debounce ~250ms, case/space-insensitive), ทำงานร่วมกับตัวกรองสถานะ
+  - AC: พิมพ์ชื่อแล้วรายการกรองถูกต้อง, ล้างคำค้นกลับมาครบ, มี empty state เมื่อไม่พบ,
+    touch target/aria-label ผ่าน (a11y); dataset ระดับสัปดาห์เล็ก → กรองฝั่ง client ได้
+  - Depends on: T4.1 (summary), T4.2 (dashboard)
 
 ---
 
