@@ -1,8 +1,15 @@
+import LiffProvider from "@/components/providers/LiffProvider";
+
 /**
- * Member shell. Auth is handled by LiffProvider (client overlay) in the root
- * layout — we don't hard-redirect here so the home route ("/") can complete the
- * LIFF handshake without a loop. Individual non-home pages may call requireUser().
+ * Member shell. LiffProvider handles the LINE login handshake here (the client
+ * overlay) so the member entry "/" can complete it without a loop. /preview and
+ * /api are intentionally outside this provider so the UI kit is viewable without
+ * LINE. Admin pages rely on the session cookie set during this handshake.
  */
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto min-h-dvh w-full max-w-md">{children}</div>;
+  return (
+    <LiffProvider>
+      <div className="mx-auto min-h-dvh w-full max-w-md">{children}</div>
+    </LiffProvider>
+  );
 }

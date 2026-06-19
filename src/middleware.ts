@@ -16,8 +16,8 @@ const SESSION_COOKIE = "lp_session";
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
 
-  // Splash / LIFF bootstrap is public.
-  if (pathname === "/") {
+  // Splash / LIFF bootstrap and the public UI-kit preview are open.
+  if (pathname === "/" || pathname === "/preview") {
     return NextResponse.next();
   }
 
