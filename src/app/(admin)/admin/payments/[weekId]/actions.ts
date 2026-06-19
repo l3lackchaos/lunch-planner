@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/guards";
 import { createServerClient } from "@/lib/supabase/server";
+import { notifyPaymentConfirmed, notifyPaymentRejected } from "@/lib/line/notify";
 import type { PaymentRow } from "@/lib/db/types";
 
 /**
@@ -43,6 +44,19 @@ async function latestPayment(
   return data ?? null;
 }
 
+/** The member's LINE userId for an order (for best-effort push). */
+async function memberLineId(
+  sb: Awaited<ReturnType<typeof createServerClient>>,
+  orderId: string,
+): Promise<string | null> {
+  const { data } = await sb
+    .from("orders")
+    .select("users(line_user_id)")
+    .eq("id", orderId)
+    .maybeSingle<{ users: { line_user_id: string | null } | null }>();
+  return data?.users?.line_user_id ?? null;
+}
+
 export async function confirmPayment(input: unknown): Promise<ActionResult> {
   const parsed = confirmSchema.safeParse(input);
   if (!parsed.success) {
@@ -68,6 +82,9 @@ export async function confirmPayment(input: unknown): Promise<ActionResult> {
     .eq("id", latest.id)
     .eq("status", "pending"); // optimistic guard: only flip a still-pending row
   if (error) return { ok: false, error: error.message };
+
+  // Best-effort push (no-op without a Messaging API token).
+  await notifyPaymentConfirmed(await memberLineId(sb, parsed.data.orderId), latest.amount);
 
   revalidatePath(`/admin/payments/${parsed.data.weekId}`);
   return { ok: true };
@@ -98,6 +115,9 @@ export async function rejectPayment(input: unknown): Promise<ActionResult> {
     .eq("id", latest.id)
     .eq("status", "pending");
   if (error) return { ok: false, error: error.message };
+
+  // Best-effort push (no-op without a Messaging API token).
+  await notifyPaymentRejected(await memberLineId(sb, parsed.data.orderId), parsed.data.reason);
 
   revalidatePath(`/admin/payments/${parsed.data.weekId}`);
   return { ok: true };
