@@ -15,7 +15,8 @@
 - ✅ **Phase 4** Summaries — Order Grid, cook count + "ยังไม่สั่ง", dashboard, Search
 - ✅ **Phase 5** Polish/QA — unit tests (7), LINE push (inert), security/perf review ([REVIEW.md](REVIEW.md));
   site-audit (T5.2) → รันหลัง deploy (ต้องมี URL + browser)
-- ⏸️ **Phase 6** Monthly Voting — เลื่อน (ยังไม่เริ่ม ตามที่ตกลง)
+- ✅ **Phase 6** Monthly Voting — vote rounds + candidates + approval voting (สมาชิก),
+  ผลเรียงคะแนน + promote เข้าปฏิทินเมนู (แอดมิน); ไม่มี AI (ADR-0011)
 
 > ต้องมี provisioning ภายนอกก่อนรันจริง: Supabase project + LINE LIFF/Login + Vercel env
 > (ดู [DEPLOY.md](DEPLOY.md)). โค้ดทั้งหมด build เขียวและพร้อม deploy.
@@ -121,14 +122,18 @@
 
 ---
 
-## Phase 6 — Monthly Menu Voting (DEFERRED 🗳️)
+## Phase 6 — Monthly Menu Voting (✅ DONE, ADR-0011)
 
-> ~วันที่ 16 ของทุกเดือน เปิดโหวตเมนูกลางวันของแต่ละวันสำหรับ "เดือนถัดไป" แล้วนำผลไป
-> สร้างแพลน. **ยังไม่ทำใน v1 — จะคุยรายละเอียดกันอีกรอบ.** ร่างแนวทาง:
-- เพิ่มตาราง `vote_rounds`, `menu_candidates`, `votes` (ดู [03-data-model.md](03-data-model.md) §2)
-- แอดมินเปิดรอบโหวต + ใส่ candidate ต่อ weekday
-- สมาชิกโหวต 1 เสียง/วัน, สรุปผล, แปลงผู้ชนะเป็น `menus` ของเดือนถัดไป
-- **ไม่ใช้ AI/LLM** ในเฟสนี้ (กันค่าใช้จ่าย API) — นับคะแนนด้วยตรรกะธรรมดาในฐานข้อมูล
+~วันที่ 16 ของทุกเดือน เปิดโหวตเมนูกลางวันสำหรับ "เดือนถัดไป" แล้วนำผลไปใส่ปฏิทินเมนู
+
+- **T6.1 ✅ Schema** — `vote_rounds`, `menu_candidates`, `votes`, view `candidate_vote_counts`, RLS (`0003_voting.sql`)
+- **T6.2 ✅ Member vote** — `/vote`: รอบที่เปิดอยู่ → โหวตได้หลายเมนู (approval, toggle), เห็นคะแนนสด
+- **T6.3 ✅ Admin manage** — `/admin/voting`: สร้างรอบ (เดือนถัดไป), เพิ่ม/ลบ candidate, เปิด/ปิดโหวต
+- **T6.4 ✅ Results + promote** — ผลเรียงคะแนน → "ใส่ปฏิทิน" promote ผู้ชนะเข้า `menus` (เลือกวันที่)
+- **ไม่ใช้ AI/LLM** — นับคะแนนด้วย SQL ล้วน (ADR-0006)
+
+> โมเดล: approval voting บน candidate pool + แอดมินจัดวันเอง (ADR-0011) — เลือกแทนการโหวต
+> ต่อ weekday เพราะ 1 เดือนมี ~20 วันทำการที่เมนูต่างกัน และแอดมินคุมการจัดลงวันจริง
 
 ---
 

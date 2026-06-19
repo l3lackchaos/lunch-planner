@@ -4,6 +4,7 @@ import { requireCookOrAdmin } from "@/lib/auth/guards";
 const ADMIN_NAV = [
   { href: "/admin", label: "หน้าหลัก" },
   { href: "/admin/menus", label: "เมนู (เดือน)" },
+  { href: "/admin/voting", label: "โหวตเมนู" },
   { href: "/admin/roster", label: "รายชื่อ" },
 ];
 

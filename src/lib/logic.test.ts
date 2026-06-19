@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deadlineThursdayBefore, weekDates, weekdayOf, fromDateStr, toDateStr } from "./date";
+import {
+  deadlineThursdayBefore,
+  weekDates,
+  weekdayOf,
+  fromDateStr,
+  toDateStr,
+  firstOfMonth,
+  nextMonthFirst,
+} from "./date";
 import { eggCellLabel, eggSupportsDoneness } from "./egg";
 import { calcAmount, formatTHB } from "./money";
 
@@ -51,4 +59,10 @@ test("amount = days × price, floored at 0", () => {
 test("formatTHB renders Thai baht", () => {
   assert.equal(formatTHB(100), "100 บาท");
   assert.equal(formatTHB(0), "0 บาท");
+});
+
+test("month helpers for voting rounds", () => {
+  assert.equal(firstOfMonth(fromDateStr("2026-06-19")), "2026-06-01");
+  assert.equal(nextMonthFirst(fromDateStr("2026-06-19")), "2026-07-01");
+  assert.equal(nextMonthFirst(fromDateStr("2026-12-10")), "2027-01-01");
 });

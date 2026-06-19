@@ -8,7 +8,7 @@
 | Identity | LINE ID token is verified server-side (aud/exp) before any session is minted (ADR-0002). |
 | Session | JWT is HS256-signed with `SUPABASE_JWT_SECRET`; stored in an httpOnly, `secure` (prod), `sameSite=lax` cookie. |
 | Authorization (defense-in-depth) | (1) route-group guards (`requireAdmin`/`requireCookOrAdmin`), (2) every server action re-checks auth + ownership + state, (3) Postgres **RLS** is the final backstop on every table. |
-| Input validation | All 6 `actions.ts` validate inputs with `zod`. |
+| Input validation | All `actions.ts` (incl. voting) validate inputs with `zod`; admin actions `requireAdmin`, member votes `getCurrentUser` + RLS (own vote, round open). |
 | Business rules enforced at multiple layers | Order edit-lock when payment confirmed (UI + action + `order_is_editable()` RLS), append-only payments, holidays not orderable, two "no" states. |
 | Storage | Slips live in a private bucket; access is path-scoped to `auth.uid()` + admins; images served via 60s signed URLs only. |
 | Payment confirm/reject | Re-resolves the latest payment server-side (never trusts a client id); only flips a still-`pending` row (optimistic guard). |

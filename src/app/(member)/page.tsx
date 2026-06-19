@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarRange, UtensilsCrossed, Wallet } from "lucide-react";
+import { CalendarRange, UtensilsCrossed, Vote, Wallet } from "lucide-react";
 import {
   AppBar,
   Card,
@@ -166,6 +166,17 @@ export default async function MemberHomePage() {
             )}
           </div>
         </Card>
+
+        {/* Vote for next month's menu (the round page handles the empty state) */}
+        <Link
+          href="/vote"
+          data-touch
+          className="flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 outline-none hover:bg-paper focus-visible:ring-2 focus-visible:ring-ink"
+        >
+          <Vote className="size-5 text-leaf" aria-hidden />
+          <span className="flex-1 text-[15px] font-medium text-ink">โหวตเมนูเดือนหน้า</span>
+          <span className="text-xs text-muted">เลือกเมนูที่อยากกิน →</span>
+        </Link>
 
         {/* Mon–Fri menus (skip holidays) */}
         <section className="space-y-2">

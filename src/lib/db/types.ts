@@ -109,3 +109,42 @@ export interface WeeklyPaymentStatusRow {
   method: PayMethod | null;
   status: PayStatus | null;
 }
+
+// ── Phase 6: voting (ADR-0011) ───────────────────────────────────────────────
+export type VoteRoundStatus = "draft" | "open" | "closed";
+
+export interface VoteRoundRow {
+  id: string;
+  target_month: string; // date (first of month)
+  title: string | null;
+  status: VoteRoundStatus;
+  opens_at: string | null;
+  closes_at: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface MenuCandidateRow {
+  id: string;
+  round_id: string;
+  name: string;
+  description: string | null;
+  proposed_by_user_id: string | null;
+  proposed_by_name: string | null;
+  created_at: string;
+}
+
+export interface VoteRow {
+  id: string;
+  round_id: string;
+  candidate_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface CandidateVoteCountRow {
+  round_id: string;
+  candidate_id: string;
+  name: string;
+  votes: number;
+}

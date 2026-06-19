@@ -109,10 +109,20 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 > **ปัจจุบัน = แถวล่าสุดของ order** (เรียงตาม `submitted_at`). ถูกปฏิเสธแล้วแจ้งใหม่ →
 > insert แถวใหม่ เก็บของเก่าไว้เป็นประวัติ (audit). dashboard อิงแถวล่าสุด/ล่าสุดที่ไม่ rejected
 
-### (Phase 6 — deferred) menu_candidates, votes
-> สำหรับโหวตเมนูประจำเดือน (~วันที่ 16) — ออกแบบรายละเอียดภายหลัง
-> ร่างคร่าว: `vote_rounds(month, status)`, `menu_candidates(round_id, weekday, name)`,
-> `votes(candidate_id, user_id, unique(round_id, weekday, user_id))`
+### Phase 6 — voting (implemented, `0003_voting.sql`, ADR-0011)
+โหวตเมนูประจำเดือน (~วันที่ 16) — นับคะแนนด้วย SQL ล้วน (ไม่มี AI, ADR-0006)
+
+| ตาราง | ฟิลด์สำคัญ |
+|-------|-----------|
+| `vote_rounds` | id, `target_month date unique`, title, `status vote_round_status (draft/open/closed)`, opens_at, closes_at, created_by |
+| `menu_candidates` | id, `round_id`→cascade, name, description, proposed_by_user_id/name |
+| `votes` | id, round_id, candidate_id→cascade, user_id, **unique(candidate_id,user_id)** (approval voting) |
+| view `candidate_vote_counts` | round_id, candidate_id, name, votes (count) |
+
+- **กลไก:** แอดมินเปิด round/เพิ่ม candidate → สมาชิกโหวตได้หลายเมนู (toggle, ตอน status='open')
+  → แอดมินดูผลเรียงคะแนน แล้ว **promote ผู้ชนะเข้า `menus`** (keyed by date, ADR-0004)
+- **RLS:** rounds/candidates อ่านได้ทุกคน เขียนเฉพาะ admin; votes อ่านได้ทุกคน (เพื่อโชว์คะแนนสด)
+  insert/delete เฉพาะเจ้าของ และเฉพาะตอน round เปิด
 
 ## 3. Views / Helpers (สำหรับสรุป)
 

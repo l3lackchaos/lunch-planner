@@ -4,12 +4,24 @@
  */
 import {
   addDays,
+  addMonths,
   format,
   getISODay,
   parseISO,
+  startOfMonth,
   startOfWeek,
   subDays,
 } from "date-fns";
+
+/** First day (YYYY-MM-DD) of the month containing `d` (or today). */
+export function firstOfMonth(d: Date = new Date()): string {
+  return format(startOfMonth(d), "yyyy-MM-dd");
+}
+
+/** First day (YYYY-MM-DD) of the month AFTER the one containing `d` (default: next month). */
+export function nextMonthFirst(d: Date = new Date()): string {
+  return format(startOfMonth(addMonths(d, 1)), "yyyy-MM-dd");
+}
 
 /** YYYY-MM-DD for a Date (local). */
 export function toDateStr(d: Date): string {
