@@ -44,11 +44,37 @@ pnpm install
 pnpm dev            # http://localhost:3000  (open via the LIFF URL on a phone to test LINE login)
 pnpm build && pnpm start
 ```
-Vercel: import the repo, set the env vars, deploy. Point the LIFF endpoint URL at the
-production (and a preview) URL.
+
+### Deploy to Vercel (Bill4Shared backend)
+Env vars to set on the Vercel project (the first three are known; the rest are secret/your own):
+```
+NEXT_PUBLIC_SUPABASE_URL=https://ohbepgrcinhjdvweuwym.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from Bill4Shared → Settings → API>
+NEXT_PUBLIC_DB_SCHEMA=meal_planner
+SUPABASE_SERVICE_ROLE_KEY=<service_role key — Settings → API>
+SUPABASE_JWT_SECRET=<JWT secret — Settings → API → JWT Settings>
+NEXT_PUBLIC_LIFF_ID=<from LINE LIFF app>
+LINE_LOGIN_CHANNEL_ID=<LINE Login channel>
+LINE_LOGIN_CHANNEL_SECRET=<LINE Login channel>
+ADMIN_LINE_USER_IDS=<your LINE userId>
+```
+**Option A — Dashboard (simplest):** Vercel → Add New → Project → import `l3lackchaos/lunch-planner`
+(branch `claude/gallant-ritchie-n9txt2`) → add the env vars above → Deploy. Pushes auto-deploy.
+
+**Option B — CLI (needs a Vercel token):**
+```bash
+export VERCEL_TOKEN=...                       # vercel.com/account/tokens
+npx vercel link --yes --token "$VERCEL_TOKEN"
+# add each env var (repeat for production/preview), e.g.:
+printf 'meal_planner' | npx vercel env add NEXT_PUBLIC_DB_SCHEMA production --token "$VERCEL_TOKEN"
+# …add the rest…
+npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+```
+After deploying, set the LIFF endpoint URL to the production (and preview) URL.
 
 ## Notes
 - LIFF login only works inside the LINE in-app browser (or the LIFF inspector). On a plain
   desktop browser the LINE handshake won't complete — use `/preview` to view the UI kit.
 - Slips are private; images are served via short-lived signed URLs to the owner + admins.
 - No bank/slip API and no LLM/AI are used (ADR-0003 / ADR-0006).
+
