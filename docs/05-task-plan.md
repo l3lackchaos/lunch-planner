@@ -96,6 +96,8 @@
 - **T5.3 🟡 E2E tests** — `webapp-testing` (Playwright): flow สั่ง→จ่าย→ยืนยัน→สรุป; unit test การคำนวณยอด/นับไข่
 - **T5.4 🟡 LINE notifications (Messaging API)** — push เมื่อ: เปิดรับสั่ง, เตือนจ่ายเงินวันพฤหัส, ยืนยัน/ปฏิเสธแล้ว
   - Note: ต้องเปิด Messaging API channel เพิ่ม
+  - **Decision:** การโพสต์ปฏิทิน/ตารางสรุปเข้ากลุ่มเมื่อแก้เมนู → **คงไว้แบบ manual** (ใช้ปุ่ม
+    print/export แล้วโพสต์เอง) ตามที่ตกลง — ไม่ทำ auto-post เข้ากลุ่มในขอบเขตนี้
 - **T5.5 🟢 Performance & security review** — perf budget, ตรวจ RLS/leak, signed URL, secret handling
 
 ---
