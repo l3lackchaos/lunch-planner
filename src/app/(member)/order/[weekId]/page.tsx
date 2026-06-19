@@ -133,7 +133,6 @@ export default async function OrderPage({ params }: PageProps) {
           editable={editable}
           days={days}
           hasOrder={Boolean(order)}
-          orderId={order?.id ?? null}
         />
       )}
     </main>

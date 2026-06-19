@@ -32,7 +32,6 @@ interface OrderFormProps {
   editable: boolean;
   days: DayModel[];
   hasOrder: boolean;
-  orderId: string | null;
 }
 
 interface DayState {
@@ -54,7 +53,6 @@ export function OrderForm({
   editable,
   days,
   hasOrder,
-  orderId,
 }: OrderFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
