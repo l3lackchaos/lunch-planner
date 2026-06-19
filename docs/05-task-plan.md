@@ -5,6 +5,21 @@
 
 ป้ายกำกับขนาดงาน: 🟢 เล็ก · 🟡 กลาง · 🔴 ใหญ่
 
+## สถานะการพัฒนา (อัปเดต)
+
+- ✅ **Phase 0** Foundations — Next.js 15 + Tailwind v4, Supabase schema/RLS/views/storage,
+  LINE→Supabase JWT auth + LIFF, deploy config. (build/lint/typecheck เขียว)
+- ✅ **Phase 1** Admin Planner — roster + claim, week plan CRUD, ปฏิทินเมนูรายเดือน (proposer hybrid + วันหยุด), print, admin home
+- ✅ **Phase 2** Member Ordering — "สัปดาห์นี้", order flow + เลือกไข่ + edit-lock + วันหยุด, RLS
+- ✅ **Phase 3** Payment — แจ้งชำระ (สลิป/เงินสด, append-only), คิวยืนยัน/ปฏิเสธ, สถานะฝั่ง member
+- ✅ **Phase 4** Summaries — Order Grid, cook count + "ยังไม่สั่ง", dashboard, Search
+- ✅ **Phase 5** Polish/QA — unit tests (7), LINE push (inert), security/perf review ([REVIEW.md](REVIEW.md));
+  site-audit (T5.2) → รันหลัง deploy (ต้องมี URL + browser)
+- ⏸️ **Phase 6** Monthly Voting — เลื่อน (ยังไม่เริ่ม ตามที่ตกลง)
+
+> ต้องมี provisioning ภายนอกก่อนรันจริง: Supabase project + LINE LIFF/Login + Vercel env
+> (ดู [DEPLOY.md](DEPLOY.md)). โค้ดทั้งหมด build เขียวและพร้อม deploy.
+
 ---
 
 ## Phase 0 — Foundations (ตั้งโครง)

@@ -39,6 +39,34 @@
 - 🗳️ **โหวตเมนูประจำเดือน** (ประมาณวันที่ 16 ของทุกเดือน) เพื่อกำหนดเมนูของเดือนถัดไป
   → ออกแบบเป็น Phase 6 ใน [docs/05-task-plan.md](docs/05-task-plan.md) (จะคุยรายละเอียดกันอีกรอบ)
 
+## โครงสร้างโค้ด
+
+```
+src/
+  app/
+    (member)/        # "/" สัปดาห์นี้, order/[weekId], payment/[orderId], me
+    (admin)/admin/   # home, roster, week/[id], menus(+print), payments/[id], summary/[id]
+    api/auth/line/   # LINE ID token → Supabase JWT handshake
+    preview/         # UI kit showcase (public)
+  components/ui/     # design system (EggPicker, DayCard, StatusChip, ...)
+  components/providers/LiffProvider.tsx
+  lib/               # supabase clients, auth (jwt/session/guards), date/egg/money, line/notify, db/types
+supabase/migrations/ # schema + RLS + views + storage ; seed.sql ; README.md
+docs/                # spec, architecture, data-model, ux-ui, task-plan, adr/, DEPLOY.md, REVIEW.md
+```
+
+## เริ่มใช้งาน
+
+ต้อง provision Supabase + LINE LIFF + Vercel ก่อน — ดู **[docs/DEPLOY.md](docs/DEPLOY.md)**
+
+```bash
+pnpm install
+pnpm dev          # /preview ดู UI kit ได้เลย (ส่วนที่ล็อกอิน LINE ต้องเปิดผ่าน LIFF)
+pnpm test         # unit tests
+pnpm build        # production build
+```
+
 ---
 
-_สถานะ: เอกสารวางแผน (ยังไม่เริ่มเขียนโค้ด)_
+_สถานะ: **Phase 0–5 พัฒนาเสร็จ build เขียว** · Phase 6 (โหวตเมนู) เลื่อนไว้_
+_ดูสถานะรายละเอียดใน [docs/05-task-plan.md](docs/05-task-plan.md)_
