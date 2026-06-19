@@ -110,9 +110,15 @@ async function resolveOrCreateMember(
 
   if (existing) {
     // Refresh profile fields from LINE (display name / avatar may change).
+    // display_name is NOT NULL in the DB → only overwrite when LINE gave us one.
+    const patch: { display_name?: string; picture_url: string | null } = {
+      picture_url: pictureUrl,
+    };
+    if (displayName) patch.display_name = displayName;
+
     const { data: updated, error: updateError } = await supabase
       .from("users")
-      .update({ display_name: displayName, picture_url: pictureUrl })
+      .update(patch)
       .eq("id", existing.id as string)
       .select("id, line_user_id, display_name, picture_url, role")
       .single();
@@ -130,7 +136,7 @@ async function resolveOrCreateMember(
     .from("users")
     .insert({
       line_user_id: lineUserId,
-      display_name: displayName,
+      display_name: displayName ?? "สมาชิก", // display_name is NOT NULL in DB
       picture_url: pictureUrl,
       role,
       claimed_at: new Date().toISOString(),
