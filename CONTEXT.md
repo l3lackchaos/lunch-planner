@@ -58,6 +58,10 @@ _Avoid_: Transaction, charge, bill.
 The summary matrix of all Members × the week's days, each cell showing the Egg choice, "ไม่ทานไข่", or "ไม่กิน".
 _Avoid_: Report, sheet.
 
+**Roster**:
+The full set of Members the Order Grid renders — admin pre-created entries plus claimed LINE accounts.
+_Avoid_: User list, members table.
+
 ## Relationships
 
 - A **Week Plan** has 5 **Menus** (by date) minus any **Holiday**; price-per-day is per Week Plan.
@@ -80,4 +84,5 @@ _Avoid_: Report, sheet.
 - "ไม่กิน" vs "ไม่ทานไข่" — resolved: distinct (no Order Item vs Egg=`none`).
 - "Proposer" vs "Cook" — resolved: Proposer chose the Menu; Cook is a read-only role.
 - "User" vs "Member" — resolved: User = auth record; Member = domain person.
-- Roster source (who shows in the Order Grid) — see ADR-0005 / open item.
+- Roster source (who shows in the Order Grid) — resolved: admin pre-creates Members,
+  LINE accounts claimed on first login (ADR-0008).

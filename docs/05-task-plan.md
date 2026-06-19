@@ -28,8 +28,11 @@
 
 ## Phase 1 — Admin Planner (แอดมินสร้างแพลน)
 
-- **T1.1 🟡 Week plan CRUD** — สร้าง/แก้ `week_plans` (week_start, price_per_day, deadline=พฤหัส, note), เปลี่ยน status draft→open→closed→billed
-  - AC: แอดมินสร้างสัปดาห์ได้, กันสร้าง week_start ซ้ำ, non-admin ทำไม่ได้ (RLS)
+- **T1.0 🟡 Roster management + claim-on-login (ADR-0008)** — แอดมินสร้าง/แก้รายชื่อสมาชิกล่วงหน้า (display_name, ไม่มีบัญชี LINE); ตอน login LIFF ครั้งแรก จับคู่กับ roster ที่ยังไม่ claim แล้วเซ็ต `line_user_id`/`claimed_at` (ถ้ากำกวมให้แอดมินช่วยเลือก); flag `is_active`
+  - AC: ตารางสรุปโชว์คนที่ยังไม่เปิดแอป, login แล้วไม่เกิดบัญชีซ้ำ, ปิด is_active แล้วหายจากสรุป
+  - Depends on: Phase 0
+- **T1.1 🟡 Week plan CRUD** — สร้าง/แก้ `week_plans` (week_start, price_per_day, **deadline = พฤหัสก่อน week_start**, note), เปลี่ยน status draft→open→closed→billed
+  - AC: แอดมินสร้างสัปดาห์ได้, กันสร้าง week_start ซ้ำ, deadline คำนวณเป็นพฤหัสก่อนสัปดาห์กิน (ADR-0007), non-admin ทำไม่ได้ (RLS)
   - Depends on: Phase 0
 - **T1.2 🔴 Menu calendar (ปฏิทินรายเดือน)** — ตาราง `menus` key ด้วย `menu_date`; แก้เมนู/รูป + **คนเลือก (hybrid: ผูก `proposed_by_user_id` หรือพิมพ์ `proposed_by_name` เอง)** + toggle `is_holiday`; มุมมองปฏิทินเดือน
   - AC: วางเมนูล่วงหน้าทั้งเดือนได้, วันหยุด mark แล้วไม่ถูกสั่ง/ไม่คิดเงิน, เลือกคนเลือกจากรายชื่อสมาชิกได้, พิมพ์ชื่ออิสระได้เมื่อไม่มีบัญชี, แสดงผล = display_name ของสมาชิก ไม่งั้นใช้ชื่อ text
@@ -47,7 +50,7 @@
   - AC: ถ้ายังไม่มีสัปดาห์ open แสดง empty state; โหลดเร็ว (RSC)
   - Depends on: Phase 1
 - **T2.2 🔴 Order flow** — toggle เลือกวันที่กิน + เลือกไข่ต่อวัน (boiled/fried/omelette/none) + doneness(สุก/ไม่สุก) + note; ปุ่ม "ครบ 5 วัน"; sticky summary ยอดเงิน; บันทึกเป็น `orders`+`order_items` (upsert)
-  - AC: 1 ออเดอร์/สัปดาห์, แก้ได้เฉพาะ status='open' & ก่อน deadline, ยอด = วัน×ราคา ถูกต้อง
+  - AC: 1 ออเดอร์/สัปดาห์, แก้ได้เฉพาะ status='open' & ก่อน deadline, **วันหยุดไม่ให้เลือก** (F6), **ล็อกเมื่อ payment=confirmed** (ADR-0010), ยอด = วัน×ราคา ถูกต้อง
   - Depends on: T2.1
 - **T2.3 🟢 RLS ตรวจสิทธิ์ order** — เจ้าของแก้ได้เท่านั้น, admin/cook อ่านได้
   - AC: ผู้ใช้ A แก้ออเดอร์ B ไม่ได้ (ทดสอบจริง)
@@ -63,7 +66,8 @@
 - **T3.2 🟡 คิวยืนยัน (admin)** — list pending ต่อสัปดาห์, ดูสลิปผ่าน signed URL, ปุ่มยืนยัน/ปฏิเสธ(+เหตุผล), บันทึก confirmed_by/at
   - AC: เฉพาะ admin ทำได้, ปฏิเสธต้องมีเหตุผล, สถานะอัปเดตให้ member เห็น
   - Depends on: T3.1
-- **T3.3 🟢 สถานะฝั่ง member** — แสดง pending/confirmed/rejected(+เหตุผล), ให้แจ้งใหม่ได้ถ้าถูกปฏิเสธ
+- **T3.3 🟢 สถานะฝั่ง member** — แสดง pending/confirmed/rejected(+เหตุผล), แจ้งใหม่ได้ถ้าถูกปฏิเสธ → **insert payment แถวใหม่ (append-only, ADR-0009)** เก็บประวัติของเดิม
+  - AC: แจ้งซ้ำได้, แถวเก่าไม่หาย, dashboard อิงแถวล่าสุด
   - Depends on: T3.2
 
 ---

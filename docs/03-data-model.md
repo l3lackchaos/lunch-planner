@@ -20,11 +20,18 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 | column | type | note |
 |--------|------|------|
 | id | uuid PK | |
-| line_user_id | text unique not null | จาก LINE `sub` |
-| display_name | text | |
+| line_user_id | text unique **null** | จาก LINE `sub`; **null = roster ที่แอดมินสร้างไว้ ยังไม่ claim** (ADR-0008) |
+| display_name | text not null | ชื่อในตาราง/สรุป |
 | picture_url | text | |
 | role | user_role default 'member' | |
+| is_active | boolean default true | กรองคนออกจากกลุ่มออกจากสรุป |
+| created_by_admin | boolean default false | true = สร้างจาก roster (ยังไม่มีบัญชี LINE) |
+| claimed_at | timestamptz (null) | เวลาที่ผูกบัญชี LINE ครั้งแรก |
 | created_at | timestamptz | |
+
+> **Roster + claim (ADR-0008):** แอดมินสร้างสมาชิกล่วงหน้าได้ (display_name, line_user_id=null).
+> ตอน login LIFF ครั้งแรก → จับคู่กับ roster ที่ยังไม่ claim (ถ้ากำกวมให้แอดมินช่วยเลือก)
+> แล้วเซ็ต `line_user_id` + `claimed_at` แทนการสร้างซ้ำ
 
 ### week_plans — รอบบิลรายสัปดาห์ (จ–ศ)
 | column | type | note |
@@ -33,7 +40,7 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 | week_start | date not null unique | วันจันทร์ของสัปดาห์ |
 | status | week_status default 'draft' | draft→open→closed→billed |
 | price_per_day | integer not null default 20 | บาท/วัน |
-| order_deadline | timestamptz | default = พฤหัสของสัปดาห์นั้น |
+| order_deadline | timestamptz | **= พฤหัสบดี "ก่อน" `week_start`** (จ่ายล่วงหน้า, ADR-0007) |
 | note | text | |
 | created_by | uuid → users.id | |
 
@@ -81,13 +88,15 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 | unique (order_id, weekday) | | กันสั่งวันซ้ำ |
 
 > จำนวนวันที่สั่ง = จำนวน order_items ของออเดอร์ (รวมที่ egg='none' ด้วย ถือว่ากินวันนั้น)
-> ยอดเงิน = COUNT(order_items) × week_plans.price_per_day
+> วันหยุด (`menus.is_holiday`) สั่งไม่ได้ → ไม่นับ; ยอดเงิน = COUNT(order_items) × price_per_day
+> **ล็อกแก้ไข (ADR-0010):** เมื่อ payment ล่าสุด = `confirmed` → แก้ order/order_items ไม่ได้
+> (ต้องให้แอดมัน reopen ก่อน)
 
-### payments — การชำระต่อออเดอร์ (รายสัปดาห์)
+### payments — การชำระต่อออเดอร์ (append-only, ADR-0009)
 | column | type | note |
 |--------|------|------|
 | id | uuid PK | |
-| order_id | uuid → orders.id (cascade) unique | 1 ออเดอร์ 1 payment ล่าสุด |
+| order_id | uuid → orders.id (cascade) | **ไม่ unique** — มีได้หลายครั้งต่อ order |
 | amount | integer not null | คำนวณ ณ เวลาแจ้ง |
 | method | pay_method not null | slip / cash |
 | slip_path | text | path ใน bucket "slips" (เฉพาะ method=slip) |
@@ -96,6 +105,9 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 | confirmed_by | uuid → users.id | admin ที่กด |
 | confirmed_at | timestamptz | |
 | reject_reason | text | ถ้า rejected |
+
+> **ปัจจุบัน = แถวล่าสุดของ order** (เรียงตาม `submitted_at`). ถูกปฏิเสธแล้วแจ้งใหม่ →
+> insert แถวใหม่ เก็บของเก่าไว้เป็นประวัติ (audit). dashboard อิงแถวล่าสุด/ล่าสุดที่ไม่ rejected
 
 ### (Phase 6 — deferred) menu_candidates, votes
 > สำหรับโหวตเมนูประจำเดือน (~วันที่ 16) — ออกแบบรายละเอียดภายหลัง
@@ -145,15 +157,19 @@ where m.is_holiday = false
     where o.user_id = u.id and oi.menu_date = m.menu_date
   );
 
--- สถานะจ่ายเงินต่อสัปดาห์ (สำหรับ admin dashboard)
+-- สถานะจ่ายเงินต่อสัปดาห์ (สำหรับ admin dashboard) — ใช้ payment "ล่าสุด" ต่อ order
 create view weekly_payment_status as
 select wp.id as week_plan_id, o.user_id, u.display_name,
        (select count(*) from order_items oi where oi.order_id = o.id) as days,
-       p.amount, p.method, p.status
+       lp.amount, lp.method, lp.status
 from week_plans wp
 join orders o on o.week_plan_id = wp.id
 join users u on u.id = o.user_id
-left join payments p on p.order_id = o.id;
+left join lateral (
+  select amount, method, status
+  from payments p where p.order_id = o.id
+  order by p.submitted_at desc limit 1            -- append-only → เอาแถวล่าสุด (ADR-0009)
+) lp on true;
 ```
 
 > **Roster:** ตาราง `users` ทำหน้าที่เป็นรายชื่อสมาชิกของกลุ่ม (ทุกคนที่เคยล็อกอิน)
