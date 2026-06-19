@@ -10,9 +10,10 @@ import { publicEnv, serverEnv } from "@/lib/env";
  */
 export function createAdminClient(): SupabaseClient {
   return createClient(publicEnv.supabaseUrl(), serverEnv.supabaseServiceRoleKey(), {
+    db: { schema: publicEnv.dbSchema() },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
-  });
+  }) as unknown as SupabaseClient;
 }

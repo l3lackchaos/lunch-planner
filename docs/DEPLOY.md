@@ -15,6 +15,17 @@ The app needs three external pieces provisioned (none can be created from code a
    ```
 3. Confirm the private bucket `slips` exists (created by the migration) and RLS is on.
 
+### 1b. Shared project (Bill4Shared) — `meal_planner` schema
+This app is also deployed onto the existing **Bill4Shared** project under a dedicated
+`meal_planner` schema (so it doesn't touch the public-schema apps). To reproduce:
+```bash
+psql "$DATABASE_URL" -f supabase/deploy/meal_planner.sql   # creates schema + exposes it
+```
+Then set **`NEXT_PUBLIC_DB_SCHEMA=meal_planner`** in the app env. (Local dev keeps the
+default `public` via migrations 0001–0003.) The `meal_planner` schema is added to the Data
+API exposed schemas by that script (`alter role authenticator set pgrst.db_schemas ...`);
+if the API can't see it, also add `meal_planner` under Dashboard → Settings → API → Exposed schemas.
+
 ## 2. LINE
 1. LINE Developers Console → create a **LINE Login** channel → note Channel ID + secret.
 2. Add a **LIFF app** under it → size Full → endpoint URL = your deployment URL →

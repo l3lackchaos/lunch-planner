@@ -14,6 +14,7 @@ export async function createServerClient(): Promise<SupabaseClient> {
   const token = await getSessionToken();
 
   return createSupabaseClient(publicEnv.supabaseUrl(), publicEnv.supabaseAnonKey(), {
+    db: { schema: publicEnv.dbSchema() },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -21,5 +22,5 @@ export async function createServerClient(): Promise<SupabaseClient> {
     global: {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
-  });
+  }) as unknown as SupabaseClient;
 }

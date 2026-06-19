@@ -31,6 +31,14 @@ export const publicEnv = {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     );
   },
+  /**
+   * Postgres schema the app's tables live in. Defaults to "public" (local dev via
+   * migrations 0001–0003). Set to "meal_planner" when deployed onto the shared
+   * Bill4Shared project, where the schema is namespaced.
+   */
+  dbSchema(): string {
+    return process.env.NEXT_PUBLIC_DB_SCHEMA || "public";
+  },
 } as const;
 
 /* ───────── Server-only (never import from client components) ───────── */

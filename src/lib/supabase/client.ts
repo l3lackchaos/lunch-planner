@@ -16,7 +16,8 @@ export function createClient(): SupabaseClient {
     browserClient = createBrowserClient(
       publicEnv.supabaseUrl(),
       publicEnv.supabaseAnonKey(),
-    );
+      { db: { schema: publicEnv.dbSchema() } },
+    ) as unknown as SupabaseClient;
   }
   return browserClient;
 }
