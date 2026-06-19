@@ -31,8 +31,8 @@
 - **T1.1 🟡 Week plan CRUD** — สร้าง/แก้ `week_plans` (week_start, price_per_day, deadline=พฤหัส, note), เปลี่ยน status draft→open→closed→billed
   - AC: แอดมินสร้างสัปดาห์ได้, กันสร้าง week_start ซ้ำ, non-admin ทำไม่ได้ (RLS)
   - Depends on: Phase 0
-- **T1.2 🔴 Menu calendar (ปฏิทินรายเดือน)** — ตาราง `menus` key ด้วย `menu_date`; แก้เมนู/รูป + `proposed_by` (คนเลือก) + toggle `is_holiday`; มุมมองปฏิทินเดือน
-  - AC: วางเมนูล่วงหน้าทั้งเดือนได้, วันหยุด mark แล้วไม่ถูกสั่ง/ไม่คิดเงิน, แสดงชื่อคนเลือก
+- **T1.2 🔴 Menu calendar (ปฏิทินรายเดือน)** — ตาราง `menus` key ด้วย `menu_date`; แก้เมนู/รูป + **คนเลือก (hybrid: ผูก `proposed_by_user_id` หรือพิมพ์ `proposed_by_name` เอง)** + toggle `is_holiday`; มุมมองปฏิทินเดือน
+  - AC: วางเมนูล่วงหน้าทั้งเดือนได้, วันหยุด mark แล้วไม่ถูกสั่ง/ไม่คิดเงิน, เลือกคนเลือกจากรายชื่อสมาชิกได้, พิมพ์ชื่ออิสระได้เมื่อไม่มีบัญชี, แสดงผล = display_name ของสมาชิก ไม่งั้นใช้ชื่อ text
   - Depends on: T1.1
 - **T1.3 🟢 Print/share ปฏิทินเดือน** — หน้า print-friendly ของปฏิทินเมนู (ตรงกับที่โพสต์กลุ่ม)
   - Depends on: T1.2

@@ -48,8 +48,14 @@ create type pay_status  as enum ('pending', 'confirmed', 'rejected');
 | name | text | ชื่อเมนู |
 | description | text | |
 | image_url | text | รูปเมนู (optional) |
-| proposed_by | text | **ชื่อคนเลือก/รับผิดชอบ** เช่น "พี่อีฟ" (หรือ uuid→users.id ถ้าผูกบัญชี) |
+| proposed_by_user_id | uuid → users.id (null) | **ผูกกับสมาชิก** (คนเลือก/รับผิดชอบ) |
+| proposed_by_name | text (null) | **ชื่ออิสระที่แอดมินพิมพ์เพิ่ม** (เผื่อคนไม่มีบัญชี) |
 | is_holiday | boolean default false | **วันหยุด** → ไม่มีออเดอร์/ไม่คิดเงิน |
+
+> **คนเลือก (proposer) = hybrid:** ใช้ `proposed_by_user_id` ก่อน, ถ้าไม่มีค่อย fallback เป็น
+> `proposed_by_name`. แสดงผล = `COALESCE(u.display_name, proposed_by_name)`.
+> แนะนำ `check (proposed_by_user_id is not null or proposed_by_name is not null or is_holiday)`
+> (วันที่ไม่ใช่วันหยุดควรมีคนเลือก ไม่ทางใดก็ทางหนึ่ง)
 
 > หมายเหตุ: `weekday` ดึงจาก `menu_date` ได้ (`extract(isodow …)`) ไม่ต้องเก็บซ้ำ
 
