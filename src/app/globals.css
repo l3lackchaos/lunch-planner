@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Design tokens — โทน "โรงอาหารไทย" (ดู docs/04-ux-ui.md)
+   ใช้ผ่าน utility ของ Tailwind v4 ได้เลย เช่น bg-paper text-ink bg-yolk
+   ────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-ink: #23201c; /* ตัวอักษรหลัก — น้ำตาลเข้มเกือบดำ */
+  --color-paper: #fbf7f0; /* พื้นหลัง — ขาวนวลกระดาษห่อข้าว */
+  --color-yolk: #f5a623; /* ไข่แดง — accent หลัก / CTA */
+  --color-yolk-ink: #4a2e00; /* ตัวอักษรบนพื้น yolk */
+  --color-leaf: #2e7d5b; /* เขียวใบเตย — สำเร็จ / จ่ายแล้ว */
+  --color-chili: #d7402b; /* พริก — เตือน / ค้างชำระ / ปฏิเสธ */
+  --color-line-brand: #06c755; /* เขียว LINE */
+  --color-muted: #8a8275; /* ข้อความรอง */
+  --color-card: #ffffff;
+  --color-border: #ece5d8;
+
+  --radius-card: 0.875rem;
+
+  --font-sans: var(--font-thai), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* รองรับ safe-area ของจอมือถือใน LINE webview */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* touch target ขั้นต่ำสำหรับมือถือ (a11y) */
+@media (pointer: coarse) {
+  button,
+  a[role="button"],
+  [data-touch] {
+    min-height: 44px;
+  }
+}
