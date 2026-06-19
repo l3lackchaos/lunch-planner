@@ -1,0 +1,95 @@
+-- seed.sql — demo data mirroring the real group's "Lunch 22–26 Jun 2026".
+-- Apply AFTER the migrations (e.g. `supabase db reset` runs migrations then this).
+-- Safe to re-run: truncates the app tables first. Does NOT touch auth/storage.
+
+begin;
+
+truncate table payments, order_items, orders, menus, week_plans, users restart identity cascade;
+
+-- ── Members (roster) ─────────────────────────────────────────────────────────
+-- line_user_id NULL = admin pre-created roster, not yet claimed (ADR-0008).
+insert into users (id, line_user_id, display_name, role, is_active, created_by_admin) values
+  ('00000000-0000-0000-0000-000000000001', null, 'อ้อย (แอดมิน)', 'admin',  true, true),
+  ('00000000-0000-0000-0000-000000000002', null, 'อีฟ',           'member', true, true),
+  ('00000000-0000-0000-0000-000000000003', null, 'ยอด',           'member', true, true),
+  ('00000000-0000-0000-0000-000000000004', null, 'ปอ',            'member', true, true),
+  ('00000000-0000-0000-0000-000000000005', null, 'แอน',           'member', true, true),
+  ('00000000-0000-0000-0000-000000000006', null, 'อดัม',          'member', true, true),
+  ('00000000-0000-0000-0000-000000000007', null, 'ยิม',           'member', true, true), -- ไม่กินทั้งสัปดาห์
+  ('00000000-0000-0000-0000-000000000008', null, 'แม่ครัว',       'cook',   true, true);
+
+-- ── Week plan: 22–26 Jun 2026 (Mon–Fri), open, 20 THB/day ────────────────────
+-- deadline = Thursday before week_start = 18 Jun 2026 (ADR-0007).
+insert into week_plans (id, week_start, status, price_per_day, order_deadline, note, created_by) values
+  ('10000000-0000-0000-0000-000000000001', '2026-06-22', 'open', 20,
+   '2026-06-18T16:59:00Z', 'สัปดาห์ 22–26 มิ.ย.', '00000000-0000-0000-0000-000000000001');
+
+-- ── Menus for the week (from the real June calendar) ─────────────────────────
+insert into menus (menu_date, name, proposed_by_name, is_holiday) values
+  ('2026-06-22', 'ปลาป้องทอดไข่ + ยำปลาป้อง', 'พี่มิ้ง',  false),
+  ('2026-06-23', 'สันคอหมูทอด แตงกวา ผักชี',   'พี่ปอ',   false),
+  ('2026-06-24', 'ต้มยำไก่น้ำข้น',             'พี่ทราย', false),
+  ('2026-06-25', 'แกงรัญจวน กระดูกหมูอ่อน',     'พี่ขวัญ', false),
+  ('2026-06-26', 'ข้าวขาหมู',                  'พี่มิ้ง',  false);
+
+-- ── Orders + items (weekday: 22=1 … 26=5) ────────────────────────────────────
+-- อีฟ: ไข่ดาวไม่สุก ทุกวัน (fried/soft)
+insert into orders (id, week_plan_id, user_id) values
+  ('20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+insert into order_items (order_id, weekday, menu_date, egg, doneness) values
+  ('20000000-0000-0000-0000-000000000001', 1, '2026-06-22', 'fried', 'soft'),
+  ('20000000-0000-0000-0000-000000000001', 2, '2026-06-23', 'fried', 'soft'),
+  ('20000000-0000-0000-0000-000000000001', 3, '2026-06-24', 'fried', 'soft'),
+  ('20000000-0000-0000-0000-000000000001', 4, '2026-06-25', 'fried', 'soft'),
+  ('20000000-0000-0000-0000-000000000001', 5, '2026-06-26', 'fried', 'soft');
+
+-- ยอด: ไม่ทานไข่ ทุกวัน (eats, egg none)
+insert into orders (id, week_plan_id, user_id) values
+  ('20000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003');
+insert into order_items (order_id, weekday, menu_date, egg) values
+  ('20000000-0000-0000-0000-000000000002', 1, '2026-06-22', 'none'),
+  ('20000000-0000-0000-0000-000000000002', 2, '2026-06-23', 'none'),
+  ('20000000-0000-0000-0000-000000000002', 3, '2026-06-24', 'none'),
+  ('20000000-0000-0000-0000-000000000002', 4, '2026-06-25', 'none'),
+  ('20000000-0000-0000-0000-000000000002', 5, '2026-06-26', 'none');
+
+-- ปอ: ไข่ต้ม ทุกวัน
+insert into orders (id, week_plan_id, user_id) values
+  ('20000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000004');
+insert into order_items (order_id, weekday, menu_date, egg) values
+  ('20000000-0000-0000-0000-000000000003', 1, '2026-06-22', 'boiled'),
+  ('20000000-0000-0000-0000-000000000003', 2, '2026-06-23', 'boiled'),
+  ('20000000-0000-0000-0000-000000000003', 3, '2026-06-24', 'boiled'),
+  ('20000000-0000-0000-0000-000000000003', 4, '2026-06-25', 'boiled'),
+  ('20000000-0000-0000-0000-000000000003', 5, '2026-06-26', 'boiled');
+
+-- แอน: ไข่ต้ม เฉพาะ จ/พ/ศ (2 วันไม่กิน)
+insert into orders (id, week_plan_id, user_id) values
+  ('20000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000005');
+insert into order_items (order_id, weekday, menu_date, egg) values
+  ('20000000-0000-0000-0000-000000000004', 1, '2026-06-22', 'boiled'),
+  ('20000000-0000-0000-0000-000000000004', 3, '2026-06-24', 'boiled'),
+  ('20000000-0000-0000-0000-000000000004', 5, '2026-06-26', 'boiled');
+
+-- อดัม: ไข่เจียว ทุกวัน
+insert into orders (id, week_plan_id, user_id) values
+  ('20000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000006');
+insert into order_items (order_id, weekday, menu_date, egg) values
+  ('20000000-0000-0000-0000-000000000005', 1, '2026-06-22', 'omelette'),
+  ('20000000-0000-0000-0000-000000000005', 2, '2026-06-23', 'omelette'),
+  ('20000000-0000-0000-0000-000000000005', 3, '2026-06-24', 'omelette'),
+  ('20000000-0000-0000-0000-000000000005', 4, '2026-06-25', 'omelette'),
+  ('20000000-0000-0000-0000-000000000005', 5, '2026-06-26', 'omelette');
+
+-- ยิม: ไม่มีออเดอร์เลย → ตารางสรุปจะแสดง "ไม่กิน" ทุกวัน
+
+-- ── Payments (append-only; amount = days × 20) ───────────────────────────────
+insert into payments (order_id, amount, method, status, confirmed_by, confirmed_at) values
+  ('20000000-0000-0000-0000-000000000001', 100, 'slip', 'confirmed', '00000000-0000-0000-0000-000000000001', now()),
+  ('20000000-0000-0000-0000-000000000003', 100, 'slip', 'confirmed', '00000000-0000-0000-0000-000000000001', now()),
+  ('20000000-0000-0000-0000-000000000005', 100, 'cash', 'confirmed', '00000000-0000-0000-0000-000000000001', now());
+insert into payments (order_id, amount, method, status) values
+  ('20000000-0000-0000-0000-000000000002', 100, 'cash', 'pending'),
+  ('20000000-0000-0000-0000-000000000004',  60, 'slip', 'pending');
+
+commit;
