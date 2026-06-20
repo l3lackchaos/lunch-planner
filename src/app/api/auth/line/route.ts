@@ -53,8 +53,10 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     user = await resolveOrCreateMember(profile.lineUserId, profile.displayName, profile.pictureUrl);
   } catch (e) {
-    console.error("[auth/line] provisioning failed:", e instanceof Error ? e.message : JSON.stringify(e));
-    return NextResponse.json({ error: "user_provisioning_failed" }, { status: 500 });
+    const err = e as { code?: string; message?: string; details?: string; hint?: string };
+    // Code first so it survives log-column truncation (e.g. PGRST106, 42501, PGRST205).
+    console.error(`DBERR code=${err?.code} msg=${err?.message} details=${err?.details} hint=${err?.hint}`);
+    return NextResponse.json({ error: "user_provisioning_failed", code: err?.code, message: err?.message }, { status: 500 });
   }
 
   try {
