@@ -12,7 +12,9 @@ function required(name: string, value: string | undefined): string {
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
-  return value;
+  // Trim — pasted env values often carry a stray newline/space (esp. secrets),
+  // which would corrupt header values / JWT signing keys.
+  return value.trim();
 }
 
 /* ───────── Public (client-safe) ───────── */
@@ -37,7 +39,7 @@ export const publicEnv = {
    * Bill4Shared project, where the schema is namespaced.
    */
   dbSchema(): string {
-    return process.env.NEXT_PUBLIC_DB_SCHEMA || "public";
+    return (process.env.NEXT_PUBLIC_DB_SCHEMA || "public").trim();
   },
 } as const;
 

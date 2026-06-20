@@ -14,10 +14,11 @@ export async function GET() {
   const out: Record<string, unknown> = {
     urlOk: /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(url),
     dbSchema: schema,
-    serviceKeyOk: key.startsWith("sb_secret_") && !/\s/.test(key),
-    serviceKeyLen: key.length,
-    jwtOk: jwt.length > 20 && !/\s/.test(jwt),
-    jwtLen: jwt.length,
+    serviceKeyOk: key.trim().startsWith("sb_secret_") && key.trim().length > 20,
+    serviceKeyLen: key.trim().length,
+    jwtOk: jwt.trim().length > 20,
+    jwtTrimLen: jwt.trim().length,
+    jwtHadWhitespace: /\s/.test(jwt),
     liffIdOk: (process.env.NEXT_PUBLIC_LIFF_ID ?? "").includes("-"),
   };
 
