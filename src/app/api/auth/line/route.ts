@@ -43,26 +43,33 @@ export async function POST(req: Request): Promise<NextResponse> {
   let profile;
   try {
     profile = await verifyLineIdToken(parsed.data.idToken);
-  } catch {
+  } catch (e) {
     // Bad / expired / forged token.
+    console.error("[auth/line] verify failed:", e instanceof Error ? e.message : e);
     return NextResponse.json({ error: "invalid_id_token" }, { status: 401 });
   }
 
   let user: AppUser;
   try {
     user = await resolveOrCreateMember(profile.lineUserId, profile.displayName, profile.pictureUrl);
-  } catch {
+  } catch (e) {
+    console.error("[auth/line] provisioning failed:", e instanceof Error ? e.message : JSON.stringify(e));
     return NextResponse.json({ error: "user_provisioning_failed" }, { status: 500 });
   }
 
-  const token = await mintSessionToken({
-    userId: user.id,
-    appRole: user.role,
-    lineUserId: user.lineUserId,
-  });
+  try {
+    const token = await mintSessionToken({
+      userId: user.id,
+      appRole: user.role,
+      lineUserId: user.lineUserId,
+    });
 
-  const store = await cookies();
-  store.set(SESSION_COOKIE, token, sessionCookieOptions);
+    const store = await cookies();
+    store.set(SESSION_COOKIE, token, sessionCookieOptions);
+  } catch (e) {
+    console.error("[auth/line] session mint failed:", e instanceof Error ? e.message : e);
+    return NextResponse.json({ error: "session_mint_failed" }, { status: 500 });
+  }
 
   return NextResponse.json({ user });
 }
